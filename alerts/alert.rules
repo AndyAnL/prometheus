@@ -1,0 +1,68 @@
+groups:
+- name: node-alerts
+  rules:
+  - alert: InstanceDown
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Instance {{ $labels.instance }} down"
+      description: "{{ $labels.job }} on {{ $labels.instance }} is down"
+
+  - alert: ServerRebooted
+    expr: changes(node_boot_time_seconds[15m]) > 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Server was rebooted"
+      description: "Uptime reset detected"
+
+  - alert: HighCPU
+    expr: avg by(instance)(rate(node_cpu_seconds_total{mode!="idle"}[1m])) * 100 > 90
+    for: 5m
+    labels:
+      severity: warning
+      service: node
+    annotations:
+      summary: "High CPU usage on {{ $labels.instance }}"
+      description: "CPU load is {{ $value | humanize }}% (threshold: 90%)"
+  
+  - alert: HighMemory
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
+      description: "Memory usage is {{ $value }}%"
+
+- name: lms-monitoring
+  rules:
+  - alert: LMSStatusCodeChanged
+    expr: changes(probe_http_status_code{instance="https://lms.skillfactory.ru"}[15m]) > 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Status code changed for lms.skillfactory.ru"
+      description: "New status code: {{ $value }}"
+
+  - alert: LMSHighLatency
+    expr: probe_duration_seconds{instance="https://lms.skillfactory.ru"} > 5
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High latency for lms.skillfactory.ru"
+      description: "Current latency: {{ $value }} seconds"
+
+  - alert: LMSSSLCertExpiry
+    expr: (probe_ssl_earliest_cert_expiry{instance="https://lms.skillfactory.ru"} - time()) / 86400 < 7
+    for: 1h
+    labels:
+      severity: critical
+    annotations:
+      summary: "SSL certificate expiring soon for lms.skillfactory.ru"
+      description: "Certificate expires in {{ $value }} days"

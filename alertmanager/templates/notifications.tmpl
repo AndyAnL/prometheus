@@ -1,0 +1,28 @@
+{{/* Базовый шаблон (универсальный) */}}
+{{ define "telegram.default" }}
+<b>[{{ .Status | toUpper }}]</b> {{ .CommonLabels.alertname }}
+{{ if eq .Status "firing" }}🚨{{ else }}✅{{ end }}
+<b>Instance:</b> {{ .CommonLabels.instance }}
+<b>Summary:</b> {{ .CommonAnnotations.summary }}
+<b>Description:</b> {{ .CommonAnnotations.description }}
+{{ end }}
+
+{{/* Для критических алертов */}}
+{{ define "telegram.critical" }}
+🚨 <b>CRITICAL: {{ .CommonLabels.alertname }}</b> 🚨
+{{ range .Alerts }}
+• <b>Target:</b> {{ .Labels.instance }}
+• <b>Error:</b> {{ .Annotations.description }}
+• <b>Time:</b> {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+{{ end }}
+{{ end }}
+
+{{/* Для предупреждений */}}
+{{ define "telegram.warning" }}
+⚠️ <b>WARNING: {{ .CommonLabels.alertname }}</b> ⚠️
+{{ range .Alerts }}
+• <b>Target:</b> {{ .Labels.instance }}
+• <b>Value:</b> {{ .Annotations.value }}
+• <b>Threshold:</b> {{ .Annotations.threshold }}
+{{ end }}
+{{ end }}

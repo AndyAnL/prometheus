@@ -1,0 +1,19 @@
+modules:
+  http_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      valid_status_codes: [200, 301, 302]  # Какие статус-коды считать успешными
+      method: GET
+      no_follow_redirects: false  # Следовать редиректам
+      fail_if_ssl: false  # Не считать ошибкой SSL-соединение
+      tls_config:
+        insecure_skip_verify: false  # Проверять SSL-сертификат
+
+  http_cert:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      tls_config:
+        insecure_skip_verify: false  # Обязательная проверка SSL

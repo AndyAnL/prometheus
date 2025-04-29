@@ -1,0 +1,72 @@
+version: '3.2'
+services:
+    prometheus:
+        image: prom/prometheus:latest
+        volumes:
+            - ./prometheus:/etc/prometheus/
+            - ./alerts:/etc/prometheus/alerts/
+        command:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --web.enable-lifecycle
+        ports:
+            - 192.168.1.118:9090:9090
+        restart: always
+        networks:
+            - monitoring-net
+
+    alertmanager:
+        image: prom/alertmanager
+        ports:
+            - "192.168.1.118:9093:9093"
+        volumes:
+            - ./alertmanager:/etc/alertmanager
+        command:
+            - '--config.file=/etc/alertmanager/alertmanager.yml'
+        restart: always
+        networks:
+            - monitoring-net
+
+    node-exporter:
+        image: prom/node-exporter
+        volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /:/rootfs:ro
+        command:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+        ports:
+            - 192.168.1.118:9100:9100
+        restart: always
+        networks:
+            - monitoring-net
+
+    grafana:
+        image: grafana/grafana:latest
+        ports:
+            - "192.168.1.118:3000:3000"
+        volumes:
+            - grafana-data:/var/lib/grafana
+            - ./grafana/provisioning:/etc/grafana/provisioning
+        environment:
+            - GF_SECURITY_ADMIN_PASSWORD=admin123
+        restart: unless-stopped
+        networks:
+            - monitoring-net
+
+    blackbox-exporter:
+        image: prom/blackbox-exporter
+        ports:
+            - "192.168.1.118:9115:9115"
+        volumes:
+            - ./blackbox:/etc/blackbox_exporter
+        restart: unless-stopped
+        networks:
+            - monitoring-net
+
+networks:
+    monitoring-net:
+        driver: bridge
+
+volumes:
+    grafana-data:

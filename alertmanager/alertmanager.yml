@@ -1,0 +1,44 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  # Обязательный получатель по умолчанию
+  receiver: 'telegram-default'
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+  
+  # Дополнительные маршруты
+  routes:
+  - match:
+      severity: 'critical'
+    receiver: 'telegram-critical'
+  - match:
+      severity: 'warning'
+    receiver: 'telegram-warning'
+
+templates:
+- '/etc/alertmanager/templates/*.tmpl'
+
+receivers:
+- name: 'telegram-default'
+  telegram_configs:
+  - bot_token: "8131736569:AAEgVfWpROOg1SFXiuFoxyccmKOHJf2_-1Y"
+    chat_id: -4724503942
+    parse_mode: 'HTML'
+    message: '{{ template "telegram.default" . }}'
+
+- name: 'telegram-critical'
+  telegram_configs:
+  - bot_token: "8131736569:AAEgVfWpROOg1SFXiuFoxyccmKOHJf2_-1Y"
+    chat_id: -4724503942
+    parse_mode: 'HTML'
+    message: '{{ template "telegram.critical" . }}'
+
+- name: 'telegram-warning'
+  telegram_configs:
+  - bot_token: "8131736569:AAEgVfWpROOg1SFXiuFoxyccmKOHJf2_-1Y"
+    chat_id: -4724503942
+    parse_mode: 'HTML'
+    message: '{{ template "telegram.warning" . }}'
